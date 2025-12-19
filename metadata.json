@@ -1,0 +1,5 @@
+{
+  "name": "WebSocket Pro Tester",
+  "description": "A high-performance WebSocket testing tool featuring message history, advanced filtering, JSON syntax highlighting, variables, templates, and scheduled messaging.",
+  "requestFramePermissions": []
+}
