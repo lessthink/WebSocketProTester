@@ -19,6 +19,7 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react';
+import { MessageTemplate } from './types';
 
 export const ICONS = {
   Send: <Send size={16} />,
@@ -40,7 +41,8 @@ export const ICONS = {
   Warning: <AlertCircle size={16} className="text-amber-500" />
 };
 
-export const DEFAULT_TEMPLATES = [
+// Fix: Add explicit typing to DEFAULT_TEMPLATES to ensure the 'type' field matches 'text' | 'json'
+export const DEFAULT_TEMPLATES: MessageTemplate[] = [
   { id: '1', name: 'Ping', content: '{"type": "ping"}', type: 'json' },
   { id: '2', name: 'Hello', content: 'Hello WebSocket Server!', type: 'text' },
   { id: '3', name: 'Auth', content: '{"action": "auth", "token": "{{uuid}}"}', type: 'json' },

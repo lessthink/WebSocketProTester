@@ -157,7 +157,6 @@ const App: React.FC = () => {
   const [showTplModal, setShowTplModal] = useState(false);
   const [newTplName, setNewTplName] = useState('');
 
-  // Floating Toolbar State
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
   const [toolbarX, setToolbarX] = useState(0);
 
@@ -184,7 +183,7 @@ const App: React.FC = () => {
     
     const savedTemplates = localStorage.getItem('ws_templates_v2');
     if (savedTemplates) {
-      setTemplates(JSON.parse(savedTemplates));
+      setTemplates(JSON.parse(savedTemplates) as MessageTemplate[]);
     } else {
       setTemplates(DEFAULT_TEMPLATES);
     }
@@ -403,7 +402,6 @@ const App: React.FC = () => {
     return m.content.toLowerCase().includes(filterText.toLowerCase());
   });
 
-  // Captures X coordinate ONLY on initial enter to fulfill "don't always follow" requirement
   const handleMessageMouseEnter = (e: React.MouseEvent, id: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -446,15 +444,15 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Centered Global Status Notification - Top Center */}
+      {/* Centered Global Status Notification */}
       {statusMessage && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[600] pointer-events-none w-full flex justify-center">
-          <div className={`px-6 py-4 rounded-2xl border-2 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl animate-in slide-in-from-top-4 duration-500 flex items-center gap-4 ${
-            statusMessage.type === 'error' ? 'bg-rose-950/70 border-rose-500/50 text-rose-100 shadow-rose-500/20' :
-            statusMessage.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-100 shadow-emerald-500/20' :
-            'bg-cyan-950/70 border-cyan-500/50 text-cyan-100 shadow-cyan-500/20'
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[600] pointer-events-none w-full flex justify-center">
+          <div className={`px-6 py-4 rounded-2xl border-2 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-3xl animate-in slide-in-from-top-6 duration-700 flex items-center gap-4 ${
+            statusMessage.type === 'error' ? 'bg-rose-950/80 border-rose-500/60 text-rose-50 shadow-rose-500/10' :
+            statusMessage.type === 'success' ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-50 shadow-emerald-500/10' :
+            'bg-cyan-950/80 border-cyan-500/60 text-cyan-50 shadow-cyan-500/10'
           }`}>
-             <div className="p-2 rounded-full bg-white/10">
+             <div className="p-2 rounded-xl bg-white/10 ring-1 ring-white/20">
                {statusMessage.type === 'error' ? <X size={20}/> : statusMessage.type === 'success' ? <Check size={20}/> : <Zap size={20}/>}
              </div>
              <span className="text-sm font-black tracking-tight">{statusMessage.text}</span>
@@ -475,7 +473,6 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-10">
-          {/* Connection History */}
           <section>
             <div className="flex items-center gap-2 mb-4">
               <HistoryIcon size={14} className="text-slate-500" />
@@ -499,7 +496,6 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* Message Templates */}
           <section>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -537,7 +533,6 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* Variables Reference */}
           <section className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/50">
              <div className="flex items-center gap-2 mb-4">
               <Zap size={14} className="text-amber-500" />
@@ -555,9 +550,7 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
-        {/* URL & Config Header */}
         <header className="p-6 bg-slate-900/20 border-b border-slate-900/80 backdrop-blur-md shrink-0">
           <div className="max-w-6xl mx-auto space-y-4">
             <div className="flex flex-col lg:flex-row gap-4 items-stretch">
@@ -590,8 +583,7 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              {/* Authentication Controls */}
-              <div className="flex items-center gap-3 bg-slate-900/30 p-2 rounded-2xl border border-slate-800/50">
+              <div className="flex items-center gap-3 bg-slate-900/30 p-2 rounded-2xl border border-slate-800/50 shadow-inner">
                 <CustomAuthSelector 
                   value={auth.type} 
                   onChange={(val) => setAuth({ ...auth, type: val })} 
@@ -607,7 +599,6 @@ const App: React.FC = () => {
                       className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-48 text-cyan-200"
                     />
                   )}
-
                   {auth.type === 'basic' && (
                     <div className="flex gap-2">
                       <input
@@ -626,14 +617,13 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-
                   {auth.type === 'custom-header' && (
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={auth.customKey || ''}
                         onChange={(e) => setAuth({ ...auth, customKey: e.target.value })}
-                        placeholder="Key (X-Auth)"
+                        placeholder="Header Key"
                         className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
                       />
                       <input
@@ -645,7 +635,6 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-
                   {auth.type === 'none' && (
                     <span className="text-[10px] text-slate-600 font-bold px-4 uppercase tracking-[0.15em] opacity-60">无需认证</span>
                   )}
@@ -653,32 +642,29 @@ const App: React.FC = () => {
               </div>
             </div>
             
-            {/* Quick Filters */}
             <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
               <div className="flex items-center gap-8">
                 <ToggleSwitch label="自动重连" checked={autoReconnect} onChange={setAutoReconnect} color="bg-indigo-500" />
-                <ToggleSwitch label="全局 JSON 格式化" checked={autoFormatJSON} onChange={setAutoFormatJSON} color="bg-emerald-500" />
+                <ToggleSwitch label="全局格式化" checked={autoFormatJSON} onChange={setAutoFormatJSON} color="bg-emerald-500" />
                 <ToggleSwitch label="正则过滤" checked={useRegexFilter} onChange={setUseRegexFilter} color="bg-amber-500" />
               </div>
-              
               <div className="relative w-64">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
                 <input
                   type="text"
-                  placeholder="搜索流量日志..."
+                  placeholder="搜索消息内容..."
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  className="w-full bg-slate-900/80 border border-slate-800 rounded-full pl-9 pr-4 py-1.5 text-xs focus:ring-1 focus:ring-cyan-500/50 outline-none placeholder:text-slate-700"
+                  className="w-full bg-slate-900/80 border border-slate-800 rounded-full pl-9 pr-4 py-1.5 text-xs focus:ring-1 focus:ring-cyan-500/50 outline-none placeholder:text-slate-700 shadow-inner"
                 />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Traffic Log */}
         <div 
           ref={scrollRef} 
-          className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar scroll-smooth"
+          className="flex-1 overflow-y-auto p-6 space-y-12 custom-scrollbar scroll-smooth"
         >
           {filteredMessages.map((msg) => {
             const isJsonMsg = isJSON(msg.content);
@@ -689,70 +675,72 @@ const App: React.FC = () => {
               <div 
                 key={msg.id} 
                 className={`flex flex-col ${isSent ? 'items-end' : 'items-start'} group relative`}
-                onMouseEnter={(e) => handleMessageMouseEnter(e, msg.id)}
-                onMouseLeave={() => setHoveredMsgId(null)}
               >
-                {/* Floating Toolbar - Positioned on Enter based on Pointer */}
-                {hoveredMsgId === msg.id && (
-                  <div 
-                    className="absolute z-50 flex items-center gap-2 px-2 py-1.5 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl backdrop-blur-md pointer-events-auto transition-all animate-in fade-in slide-in-from-bottom-1"
-                    style={{ 
-                      top: '-42px', 
-                      left: `${toolbarX}px`,
-                      transform: 'translateX(-50%)'
-                    }}
-                  >
-                    <ActionButton 
-                      icon={<Copy size={13} />} 
-                      tip="复制原始内容" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigator.clipboard.writeText(msg.content);
-                        showStatus('已复制原始文本', 'success');
-                      }} 
-                    />
-                    
-                    {isJsonMsg && (
-                      <ActionButton 
-                        icon={msg.forceFormat ? <Code2 size={13} /> : <FileJson size={13} />} 
-                        tip={msg.forceFormat ? "显示原始文本" : "格式化 JSON"}
-                        color="text-emerald-500" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleMessageFormatting(msg.id);
-                        }} 
-                      />
-                    )}
-
-                    {isJsonMsg && (
-                      <ActionButton 
-                        icon={<ClipboardList size={13} />} 
-                        tip="复制格式化 JSON" 
-                        color="text-cyan-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText(formatJSON(msg.content));
-                          showStatus('已复制格式化 JSON', 'success');
-                        }} 
-                      />
-                    )}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-700" />
-                  </div>
-                )}
-
-                <div className={`flex items-center gap-3 mb-2 px-1 text-[10px] font-black uppercase tracking-tighter ${isSent ? 'flex-row-reverse text-fuchsia-500' : 'text-cyan-500'}`}>
-                  <span>{isSent ? '发送 (OUT)' : '接收 (IN)'}</span>
+                <div className={`flex items-center gap-3 mb-2 px-2 text-[10px] font-black uppercase tracking-tighter ${isSent ? 'flex-row-reverse text-fuchsia-500' : 'text-cyan-500'}`}>
+                  <span>{isSent ? 'Sent' : 'Received'}</span>
                   <div className={`w-1 h-1 rounded-full ${isSent ? 'bg-fuchsia-500' : 'bg-cyan-500'}`} />
                   <span className="text-slate-600 font-mono opacity-80">{new Date(msg.timestamp).toLocaleTimeString()}</span>
                 </div>
 
-                <div className={`relative max-w-[90%] lg:max-w-[85%] p-4 rounded-2xl border transition-all duration-300 shadow-sm ${
-                  isSent 
-                    ? 'bg-fuchsia-950/5 border-fuchsia-500/10 text-fuchsia-50 group-hover:border-fuchsia-500/30' 
-                    : msg.isError 
-                      ? 'bg-rose-950/10 border-rose-500/20 text-rose-100' 
-                      : 'bg-slate-900/40 border-slate-800/80 text-slate-200 group-hover:border-slate-700'
-                }`}>
+                <div 
+                  className={`relative max-w-[92%] lg:max-w-[85%] p-4 rounded-2xl border transition-all duration-300 shadow-xl ${
+                    isSent 
+                      ? 'bg-fuchsia-950/5 border-fuchsia-500/10 text-fuchsia-50 group-hover:border-fuchsia-500/30' 
+                      : msg.isError 
+                        ? 'bg-rose-950/10 border-rose-500/20 text-rose-100' 
+                        : 'bg-slate-900/40 border-slate-800/80 text-slate-200 group-hover:border-slate-700 shadow-slate-950/20'
+                  }`}
+                  onMouseEnter={(e) => handleMessageMouseEnter(e, msg.id)}
+                  onMouseLeave={() => setHoveredMsgId(null)}
+                >
+                  {/* Floating Toolbar - Positioned close to the bubble, triggered by hovering the bubble */}
+                  {hoveredMsgId === msg.id && (
+                    <div 
+                      className="absolute z-[100] flex items-center gap-2 px-2 py-1.5 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl backdrop-blur-md pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300"
+                      style={{ 
+                        top: '-40px', // Adjusted to be closer to the box
+                        left: `${toolbarX}px`,
+                        transform: 'translateX(-50%)'
+                      }}
+                    >
+                      {isJsonMsg && (
+                        <ActionButton 
+                          icon={msg.forceFormat ? <Code2 size={13} /> : <FileJson size={13} />} 
+                          tip={msg.forceFormat ? "还原原始内容" : "格式化显示"}
+                          color="text-emerald-500" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMessageFormatting(msg.id);
+                          }} 
+                        />
+                      )}
+                      
+                      <ActionButton 
+                        icon={<Copy size={13} />} 
+                        tip="复制原始内容" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(msg.content);
+                          showStatus('已复制原始文本', 'success');
+                        }} 
+                      />
+
+                      {isJsonMsg && (
+                        <ActionButton 
+                          icon={<ClipboardList size={13} />} 
+                          tip="复制 JSON 结果" 
+                          color="text-cyan-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(formatJSON(msg.content));
+                            showStatus('已复制格式化后的内容', 'success');
+                          }} 
+                        />
+                      )}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-700" />
+                    </div>
+                  )}
+
                   {shouldFormat ? (
                     <JSONHighlighter content={formatJSON(msg.content)} />
                   ) : (
@@ -764,30 +752,29 @@ const App: React.FC = () => {
           })}
           
           {filteredMessages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-slate-800">
-              <div className="p-8 bg-slate-900/20 rounded-full border border-slate-900/50 mb-6 group hover:border-cyan-500/20 transition-colors">
-                <RefreshCw size={48} className="opacity-10 group-hover:opacity-20 transition-opacity" />
+            <div className="h-full flex flex-col items-center justify-center text-slate-800 opacity-40">
+              <div className="p-12 bg-slate-900/30 rounded-full border border-slate-800/50 mb-6">
+                <Terminal size={64} className="opacity-20" />
               </div>
-              <p className="text-sm font-black uppercase tracking-[0.2em] opacity-20 group-hover:opacity-40 transition-opacity">等待 Socket 流量数据...</p>
+              <p className="text-xs font-black uppercase tracking-[0.4em]">Listening for traffic...</p>
             </div>
           )}
         </div>
 
-        {/* Composer Footer */}
-        <footer className="p-6 bg-slate-900/40 border-t border-slate-900 backdrop-blur-xl shrink-0">
+        <footer className="p-6 bg-slate-900/40 border-t border-slate-900 backdrop-blur-2xl shrink-0">
           <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
             <div className="flex-1 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800/50 shadow-inner">
+                <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
                   <button 
                     onClick={() => setMsgType('text')}
-                    className={`px-5 py-1.5 text-[10px] rounded-lg transition-all font-black tracking-widest ${msgType === 'text' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
+                    className={`px-5 py-2 text-[10px] rounded-lg transition-all font-black tracking-widest ${msgType === 'text' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
                   >
-                    文本 (RAW)
+                    RAW TEXT
                   </button>
                   <button 
                     onClick={() => setMsgType('json')}
-                    className={`px-5 py-1.5 text-[10px] rounded-lg transition-all font-black tracking-widest ${msgType === 'json' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
+                    className={`px-5 py-2 text-[10px] rounded-lg transition-all font-black tracking-widest ${msgType === 'json' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
                   >
                     JSON
                   </button>
@@ -795,9 +782,9 @@ const App: React.FC = () => {
                 {msgType === 'json' && (
                   <button 
                     onClick={() => setInputText(formatJSON(inputText))}
-                    className="text-[10px] text-emerald-400 hover:text-emerald-300 font-black flex items-center gap-2 px-3 py-1.5 bg-emerald-950/30 rounded-lg border border-emerald-900/50 transition-colors group shadow-sm"
+                    className="text-[10px] text-emerald-400 hover:text-emerald-300 font-black flex items-center gap-2 px-3 py-2 bg-emerald-950/30 rounded-xl border border-emerald-800/50 transition-all hover:scale-105"
                   >
-                    <Wand2 size={12} className="group-hover:rotate-12 transition-transform" /> 格式化输入
+                    <Wand2 size={12} /> FORMAT INPUT
                   </button>
                 )}
               </div>
@@ -809,17 +796,17 @@ const App: React.FC = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendMessage();
                   }}
-                  placeholder={msgType === 'json' ? '{ "type": "ping", "payload": {} }' : '输入发送内容... (Ctrl+Enter 发送)'}
+                  placeholder={msgType === 'json' ? '{ "command": "subscribe", "channel": "updates" }' : 'Type your message... (Ctrl+Enter to send)'}
                   rows={4}
-                  className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all resize-none text-white shadow-inner scrollbar-hide"
+                  className="w-full bg-slate-900/70 border border-slate-800 rounded-2xl p-5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500/40 transition-all resize-none text-white shadow-2xl scrollbar-hide"
                 />
                 <button
                   onClick={() => sendMessage()}
                   disabled={!isConnected}
                   className={`absolute bottom-5 right-5 w-14 h-14 rounded-2xl shadow-2xl transition-all flex items-center justify-center group/send overflow-hidden ${
                     isConnected 
-                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white active:scale-95 shadow-cyan-900/30' 
-                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                      ? 'bg-gradient-to-br from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white active:scale-95 shadow-indigo-900/40' 
+                      : 'bg-slate-800 text-slate-700 cursor-not-allowed opacity-50'
                   }`}
                 >
                   <Send size={24} className={`${isConnected ? 'group-hover/send:translate-x-1 group-hover/send:-translate-y-1 transition-transform' : ''}`} />
@@ -827,32 +814,31 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Scheduler Panel */}
-            <div className="w-full lg:w-80 bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col gap-4 shadow-2xl">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="w-full lg:w-80 bg-slate-900/50 p-5 rounded-2xl border border-slate-800 flex flex-col gap-4 shadow-2xl backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-1">
                 <Clock size={14} className="text-indigo-400" />
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">自动化任务</span>
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Automation</span>
               </div>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[10px] font-bold text-slate-600">频率间隔</span>
-                  <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-600 uppercase">Interval</span>
+                  <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
                     <input
                       type="number"
                       value={schedule.interval}
                       onChange={(e) => setSchedule({ ...schedule, interval: Math.max(10, Number(e.target.value)) })}
                       className="w-16 bg-transparent text-xs text-indigo-400 font-black outline-none"
                     />
-                    <span className="text-[9px] text-slate-700">MS</span>
+                    <span className="text-[9px] text-slate-700 font-bold">MS</span>
                   </div>
                 </div>
                 
                 <textarea 
-                  placeholder="循环发送的内容..."
+                  placeholder="Task message payload..."
                   value={schedule.message}
                   onChange={(e) => setSchedule({ ...schedule, message: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] h-24 font-mono focus:ring-1 focus:ring-indigo-500 outline-none text-indigo-100 placeholder-slate-900"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-[11px] h-24 font-mono focus:ring-1 focus:ring-indigo-500 outline-none text-indigo-100 placeholder-slate-800 shadow-inner"
                 />
 
                 <button
@@ -860,13 +846,13 @@ const App: React.FC = () => {
                   disabled={!isConnected}
                   className={`w-full py-4 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-3 border shadow-xl ${
                     schedule.enabled 
-                      ? 'bg-rose-900/30 text-rose-400 border-rose-500/50 hover:bg-rose-900/50 shadow-rose-950/20 active:scale-[0.98]' 
+                      ? 'bg-rose-900/30 text-rose-400 border-rose-500/50 hover:bg-rose-900/50 shadow-rose-950/20' 
                       : isConnected
-                        ? 'bg-indigo-900/30 text-indigo-400 border-indigo-500/50 hover:bg-indigo-900/50 shadow-indigo-950/20 active:scale-[0.98]'
-                        : 'bg-slate-800/50 border-slate-800 text-slate-700 cursor-not-allowed'
+                        ? 'bg-indigo-900/30 text-indigo-400 border-indigo-500/50 hover:bg-indigo-900/50 shadow-indigo-950/20'
+                        : 'bg-slate-800/30 border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
                   }`}
                 >
-                  {schedule.enabled ? <><Square size={14}/> 停止循环</> : <><Play size={14}/> 开启循环任务</>}
+                  {schedule.enabled ? <><Square size={14}/> STOP CYCLE</> : <><Play size={14}/> START CYCLE</>}
                 </button>
               </div>
             </div>
