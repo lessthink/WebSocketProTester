@@ -448,9 +448,9 @@ const App: React.FC = () => {
       {statusMessage && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[600] pointer-events-none w-full flex justify-center">
           <div className={`px-6 py-4 rounded-2xl border-2 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-3xl animate-in slide-in-from-top-6 duration-700 flex items-center gap-4 ${
-            statusMessage.type === 'error' ? 'bg-rose-950/80 border-rose-500/60 text-rose-50 shadow-rose-500/10' :
-            statusMessage.type === 'success' ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-50 shadow-emerald-500/10' :
-            'bg-cyan-950/80 border-cyan-500/60 text-cyan-50 shadow-cyan-500/10'
+            statusMessage.type === 'error' ? 'bg-rose-950/80 border-rose-500/60 text-rose-100 shadow-rose-500/10' :
+            statusMessage.type === 'success' ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-100 shadow-emerald-500/10' :
+            'bg-cyan-950/80 border-cyan-500/60 text-cyan-100 shadow-cyan-500/10'
           }`}>
              <div className="p-2 rounded-xl bg-white/10 ring-1 ring-white/20">
                {statusMessage.type === 'error' ? <X size={20}/> : statusMessage.type === 'success' ? <Check size={20}/> : <Zap size={20}/>}
@@ -554,7 +554,7 @@ const App: React.FC = () => {
         <header className="p-6 bg-slate-900/20 border-b border-slate-900/80 backdrop-blur-md shrink-0">
           <div className="max-w-6xl mx-auto space-y-4">
             <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-              <div className="flex-1 flex gap-2 relative group">
+              <div className="flex-1 flex gap-2 relative group items-center">
                 <div className="flex-1 flex bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all">
                   <div className="flex items-center px-4 border-r border-slate-800">
                     <Terminal size={14} className="text-slate-600" />
@@ -570,20 +570,20 @@ const App: React.FC = () => {
                 <button
                   onClick={isConnected ? disconnect : connect}
                   disabled={isConnecting}
-                  className={`px-8 rounded-2xl text-sm font-black transition-all flex items-center gap-2 shadow-2xl ${
+                  className={`px-6 py-2.5 h-11 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg self-center whitespace-nowrap ${
                     isConnected 
-                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/20' 
+                      ? 'bg-rose-500 hover:bg-rose-400 text-white shadow-rose-900/20' 
                       : isConnecting 
                         ? 'bg-slate-800 text-slate-500 cursor-wait'
-                        : 'bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white shadow-cyan-900/20'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
                   }`}
                 >
-                  {isConnecting ? <RefreshCw className="animate-spin" size={16}/> : isConnected ? <Square size={16}/> : <Play size={16}/>}
+                  {isConnecting ? <RefreshCw className="animate-spin" size={14}/> : isConnected ? <Square size={14}/> : <Play size={14}/>}
                   {isConnecting ? '握手中' : isConnected ? '断开' : '连接'}
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 bg-slate-900/30 p-2 rounded-2xl border border-slate-800/50 shadow-inner">
+              <div className="flex items-center gap-3 bg-slate-900/30 p-2 rounded-2xl border border-slate-800/50 shadow-inner h-11 self-center">
                 <CustomAuthSelector 
                   value={auth.type} 
                   onChange={(val) => setAuth({ ...auth, type: val })} 
@@ -596,7 +596,7 @@ const App: React.FC = () => {
                       value={auth.token || ''}
                       onChange={(e) => setAuth({ ...auth, token: e.target.value })}
                       placeholder="Bearer Token..."
-                      className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-48 text-cyan-200"
+                      className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-48 text-cyan-200"
                     />
                   )}
                   {auth.type === 'basic' && (
@@ -606,14 +606,14 @@ const App: React.FC = () => {
                         value={auth.username || ''}
                         onChange={(e) => setAuth({ ...auth, username: e.target.value })}
                         placeholder="User"
-                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-24 text-cyan-200"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-24 text-cyan-200"
                       />
                       <input
                         type="password"
                         value={auth.password || ''}
                         onChange={(e) => setAuth({ ...auth, password: e.target.value })}
                         placeholder="Pass"
-                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-24 text-cyan-200"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-24 text-cyan-200"
                       />
                     </div>
                   )}
@@ -624,14 +624,14 @@ const App: React.FC = () => {
                         value={auth.customKey || ''}
                         onChange={(e) => setAuth({ ...auth, customKey: e.target.value })}
                         placeholder="Header Key"
-                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
                       />
                       <input
                         type="text"
                         value={auth.customValue || ''}
                         onChange={(e) => setAuth({ ...auth, customValue: e.target.value })}
                         placeholder="Value"
-                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
                       />
                     </div>
                   )}
@@ -693,12 +693,11 @@ const App: React.FC = () => {
                   onMouseEnter={(e) => handleMessageMouseEnter(e, msg.id)}
                   onMouseLeave={() => setHoveredMsgId(null)}
                 >
-                  {/* Floating Toolbar - Positioned close to the bubble, triggered by hovering the bubble */}
                   {hoveredMsgId === msg.id && (
                     <div 
                       className="absolute z-[100] flex items-center gap-2 px-2 py-1.5 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl backdrop-blur-md pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300"
                       style={{ 
-                        top: '-40px', // Adjusted to be closer to the box
+                        top: '-40px', 
                         left: `${toolbarX}px`,
                         transform: 'translateX(-50%)'
                       }}
@@ -817,7 +816,7 @@ const App: React.FC = () => {
             <div className="w-full lg:w-80 bg-slate-900/50 p-5 rounded-2xl border border-slate-800 flex flex-col gap-4 shadow-2xl backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-1">
                 <Clock size={14} className="text-indigo-400" />
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Automation</span>
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">自动发送</span>
               </div>
               
               <div className="space-y-4">
@@ -852,7 +851,7 @@ const App: React.FC = () => {
                         : 'bg-slate-800/30 border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
                   }`}
                 >
-                  {schedule.enabled ? <><Square size={14}/> STOP CYCLE</> : <><Play size={14}/> START CYCLE</>}
+                  {schedule.enabled ? <><Square size={14}/> STOP </> : <><Play size={14}/> STAR</>}
                 </button>
               </div>
             </div>
