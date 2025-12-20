@@ -1,8 +1,32 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Layers, Wand2, RefreshCw, ClipboardType, ClipboardList } from 'lucide-react';
+import { 
+  Layers, 
+  Wand2, 
+  RefreshCw, 
+  ShieldCheck, 
+  Zap, 
+  Terminal, 
+  History as HistoryIcon,
+  Plus,
+  Trash2,
+  Copy,
+  Search,
+  Check,
+  X,
+  Play,
+  Square,
+  Clock,
+  Send,
+  Save,
+  ChevronRight,
+  ChevronDown,
+  Code2,
+  FileJson,
+  ClipboardList
+} from 'lucide-react';
 import { ICONS, DEFAULT_TEMPLATES, VARIABLE_HELP } from './constants';
-import { AuthConfig, HistoryItem, WSMessage, MessageTemplate, ScheduleConfig } from './types';
+import { AuthConfig, HistoryItem, WSMessage, MessageTemplate, ScheduleConfig, AuthType } from './types';
 import { processVariables, formatJSON, isJSON } from './utils/variableProcessor';
 import { JSONHighlighter } from './components/JSONHighlighter';
 
@@ -16,21 +40,97 @@ const safeBtoa = (str: string) => {
   }
 };
 
-// Custom Switch Component for better aesthetics
+const ActionButton: React.FC<{ 
+  onClick: (e: React.MouseEvent) => void, 
+  icon: React.ReactNode, 
+  tip: string, 
+  color?: string 
+}> = ({ onClick, icon, tip, color = "text-slate-400" }) => (
+  <div className="relative group/tip flex items-center justify-center">
+    <button 
+      onClick={onClick}
+      className={`p-2 rounded-lg bg-slate-900 border border-slate-700 ${color} hover:text-white transition-all shadow-xl active:scale-90 hover:bg-slate-800`}
+    >
+      {icon}
+    </button>
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 border border-slate-700 text-[10px] font-bold text-white whitespace-nowrap rounded pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 shadow-2xl">
+      {tip}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+    </div>
+  </div>
+);
+
+const CustomAuthSelector: React.FC<{ 
+  value: AuthType, 
+  onChange: (val: AuthType) => void 
+}> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const options: { id: AuthType, label: string }[] = [
+    { id: 'none', label: '无认证 (Open)' },
+    { id: 'bearer', label: 'Bearer Token' },
+    { id: 'basic', label: 'Basic Auth' },
+    { id: 'custom-header', label: 'Custom Header' }
+  ];
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:border-cyan-500/50 transition-all text-xs font-bold text-slate-300 min-w-[140px] justify-between shadow-lg ring-1 ring-white/5"
+      >
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={14} className="text-cyan-500" />
+          <span className="uppercase tracking-wider">
+            {options.find(o => o.id === value)?.label.split(' ')[0]}
+          </span>
+        </div>
+        <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl py-2 shadow-2xl z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+          {options.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => { onChange(opt.id); setIsOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors flex items-center justify-between group ${value === opt.id ? 'text-cyan-400 bg-cyan-500/5' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            >
+              <span>{opt.label}</span>
+              {value === opt.id && <Check size={14} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ToggleSwitch: React.FC<{ 
   label: string, 
   checked: boolean, 
   onChange: (val: boolean) => void,
   color?: string 
-}> = ({ label, checked, onChange, color = 'bg-indigo-600' }) => (
+}> = ({ label, checked, onChange, color = 'bg-cyan-500' }) => (
   <button 
     onClick={() => onChange(!checked)}
     className="flex items-center gap-2 group outline-none"
   >
-    <div className={`relative w-8 h-4 rounded-full transition-colors duration-200 ${checked ? color : 'bg-slate-700'}`}>
-      <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-200 ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+    <div className={`relative w-8 h-4 rounded-full transition-all duration-300 ${checked ? color : 'bg-slate-800'}`}>
+      <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-300 ${checked ? 'translate-x-4 shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'translate-x-0'}`} />
     </div>
-    <span className="text-[10px] text-slate-400 group-hover:text-slate-200 font-bold uppercase tracking-wider select-none">
+    <span className="text-[10px] text-slate-500 group-hover:text-slate-300 font-bold uppercase tracking-widest select-none">
       {label}
     </span>
   </button>
@@ -40,9 +140,8 @@ const App: React.FC = () => {
   const [url, setUrl] = useState('wss://ws.postman-echo.com/raw');
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [auth, setAuth] = useState<AuthConfig>({ type: 'none' });
+  const [auth, setAuth] = useState<AuthConfig>({ type: 'none', customKey: 'X-Auth-Token' });
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  // Fix: Added 'warning' to status message type
   const [statusMessage, setStatusMessage] = useState<{ text: string, type: 'info' | 'error' | 'success' | 'warning' } | null>(null);
   
   const [messages, setMessages] = useState<WSMessage[]>([]);
@@ -54,7 +153,14 @@ const App: React.FC = () => {
   const [autoFormatJSON, setAutoFormatJSON] = useState(false);
   const [autoReconnect, setAutoReconnect] = useState(false);
   
-  const [templates, setTemplates] = useState<MessageTemplate[]>(DEFAULT_TEMPLATES);
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [showTplModal, setShowTplModal] = useState(false);
+  const [newTplName, setNewTplName] = useState('');
+
+  // Floating Toolbar State
+  const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
+  const [toolbarX, setToolbarX] = useState(0);
+
   const [schedule, setSchedule] = useState<ScheduleConfig>({
     enabled: false,
     interval: 5000,
@@ -67,20 +173,20 @@ const App: React.FC = () => {
   const scheduleIntervalRef = useRef<number | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   
-  // Fix: Added 'warning' to showStatus type definition
   const showStatus = (text: string, type: 'info' | 'error' | 'success' | 'warning' = 'info') => {
     setStatusMessage({ text, type });
-    setTimeout(() => setStatusMessage(null), 3000);
+    setTimeout(() => setStatusMessage(null), 3500);
   };
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('ws_history');
+    const savedHistory = localStorage.getItem('ws_history_v2');
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     
-    const savedTemplates = localStorage.getItem('ws_templates');
+    const savedTemplates = localStorage.getItem('ws_templates_v2');
     if (savedTemplates) {
-      const parsed = JSON.parse(savedTemplates);
-      if (parsed.length > 0) setTemplates(parsed);
+      setTemplates(JSON.parse(savedTemplates));
+    } else {
+      setTemplates(DEFAULT_TEMPLATES);
     }
 
     return () => {
@@ -91,11 +197,11 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('ws_history', JSON.stringify(history));
+    localStorage.setItem('ws_history_v2', JSON.stringify(history));
   }, [history]);
 
   useEffect(() => {
-    localStorage.setItem('ws_templates', JSON.stringify(templates));
+    localStorage.setItem('ws_templates_v2', JSON.stringify(templates));
   }, [templates]);
 
   const scrollToBottom = () => {
@@ -109,7 +215,7 @@ const App: React.FC = () => {
   }, [messages]);
 
   const connect = useCallback(() => {
-    if (!url.trim()) return showStatus('请输入连接地址', 'error');
+    if (!url.trim()) return showStatus('请输入有效的 WebSocket 地址', 'error');
     
     try {
       setIsConnecting(true);
@@ -120,11 +226,15 @@ const App: React.FC = () => {
       }
 
       let finalUrl = url.trim();
+      const separator = finalUrl.includes('?') ? '&' : '?';
+
       if (auth.type === 'bearer' && auth.token) {
-        finalUrl += (finalUrl.includes('?') ? '&' : '?') + `token=${encodeURIComponent(auth.token)}`;
+        finalUrl += `${separator}token=${encodeURIComponent(auth.token)}`;
       } else if (auth.type === 'basic' && auth.username && auth.password) {
         const credentials = safeBtoa(`${auth.username}:${auth.password}`);
-        finalUrl += (finalUrl.includes('?') ? '&' : '?') + `auth=${credentials}`;
+        finalUrl += `${separator}auth=${credentials}`;
+      } else if (auth.type === 'custom-header' && auth.customKey && auth.customValue) {
+        finalUrl += `${separator}${encodeURIComponent(auth.customKey)}=${encodeURIComponent(auth.customValue)}`;
       }
 
       const ws = new WebSocket(finalUrl);
@@ -133,12 +243,12 @@ const App: React.FC = () => {
       ws.onopen = () => {
         setIsConnected(true);
         setIsConnecting(false);
-        showStatus('连接成功', 'success');
+        showStatus('连接已建立', 'success');
         addMessage({
           id: Math.random().toString(),
           timestamp: Date.now(),
           direction: 'received',
-          content: 'Session Started: Connected to ' + url,
+          content: `Connected to ${url} (Protocol: ${ws.protocol || 'Default'})`,
           type: 'text'
         });
 
@@ -149,7 +259,7 @@ const App: React.FC = () => {
           auth: { ...auth },
           lastConnected: Date.now()
         };
-        setHistory(prev => [newHistory, ...prev.filter(h => h.url !== url)].slice(0, 20));
+        setHistory(prev => [newHistory, ...prev.filter(h => h.url !== url)].slice(0, 15));
       };
 
       ws.onmessage = (event) => {
@@ -168,8 +278,8 @@ const App: React.FC = () => {
         setIsConnecting(false);
         stopSchedule();
         
-        const closeMsg = `连接断开 (代码: ${event.code}${event.reason ? `, 原因: ${event.reason}` : ''})`;
-        showStatus('连接已断开', 'info');
+        const closeMsg = `Session Closed [Code: ${event.code}${event.reason ? `, Reason: ${event.reason}` : ''}]`;
+        showStatus('连接断开', 'info');
         addMessage({
           id: Math.random().toString(),
           timestamp: Date.now(),
@@ -180,22 +290,21 @@ const App: React.FC = () => {
         });
         wsRef.current = null;
 
-        // Auto-reconnect logic
         if (autoReconnect) {
-          showStatus('准备尝试重新连接...', 'info');
+          showStatus('正在尝试自动重连...', 'warning');
           reconnectTimeoutRef.current = window.setTimeout(() => {
             connect();
-          }, 5000);
+          }, 3000);
         }
       };
 
-      ws.onerror = (error) => {
+      ws.onerror = () => {
         setIsConnecting(false);
-        showStatus('连接异常', 'error');
+        showStatus('连接握手失败', 'error');
       };
     } catch (e) {
       setIsConnecting(false);
-      showStatus('初始化连接失败', 'error');
+      showStatus('无效的 URL 或协议', 'error');
     }
   }, [url, auth, autoReconnect]);
 
@@ -207,10 +316,15 @@ const App: React.FC = () => {
       wsRef.current = null;
     }
     setIsConnected(false);
+    showStatus('已手动关闭连接', 'info');
   };
 
   const addMessage = (msg: WSMessage) => {
     setMessages(prev => [...prev, msg]);
+  };
+
+  const toggleMessageFormatting = (msgId: string) => {
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, forceFormat: !m.forceFormat } : m));
   };
 
   const sendMessage = useCallback((overrideText?: string, overrideType?: 'text' | 'json') => {
@@ -218,13 +332,13 @@ const App: React.FC = () => {
     const finalType = overrideType ?? msgType;
     
     if (!rawContent || !rawContent.trim()) {
-      if (!overrideText) showStatus('内容不能为空', 'error');
+      if (!overrideText) showStatus('请输入发送内容', 'warning');
       return;
     }
 
     const ws = wsRef.current;
     if (!ws || ws.readyState !== 1) {
-      showStatus('未连接，无法发送', 'error');
+      showStatus('未连接服务器', 'error');
       setIsConnected(false);
       return;
     }
@@ -241,42 +355,34 @@ const App: React.FC = () => {
       });
       if (!overrideText) setInputText('');
     } catch (err) {
-      showStatus('发送失败', 'error');
+      showStatus('发送数据失败', 'error');
     }
   }, [inputText, msgType]);
 
-  const addTemplate = () => {
-    if (!inputText.trim()) return showStatus('请先输入模板内容', 'warning');
-    const name = window.prompt('请输入模板名称:');
-    if (name === null) return; // Cancelled
-    if (!name.trim()) return showStatus('模板名称不能为空', 'error');
-    
+  const handleAddTemplate = () => {
+    if (!inputText.trim()) return showStatus('请先在输入框填写内容', 'warning');
+    setShowTplModal(true);
+  };
+
+  const saveTemplate = () => {
+    if (!newTplName.trim()) return showStatus('名称不能为空', 'error');
     const newTpl: MessageTemplate = {
       id: Date.now().toString(),
-      name: name.trim(),
+      name: newTplName.trim(),
       content: inputText,
       type: msgType
     };
-    
-    setTemplates(prev => [...prev, newTpl]);
-    showStatus('模板保存成功', 'success');
-  };
-
-  const toggleMessageFormat = (id: string) => {
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, forceFormat: !m.forceFormat } : m));
-  };
-
-  const copyToClipboard = (text: string, formatted: boolean = false) => {
-    const finalVal = formatted && isJSON(text) ? formatJSON(text) : text;
-    navigator.clipboard.writeText(finalVal);
-    showStatus(formatted ? '已复制格式化数据' : '已复制原始数据', 'success');
+    setTemplates(prev => [newTpl, ...prev]);
+    setNewTplName('');
+    setShowTplModal(false);
+    showStatus('模板已保存', 'success');
   };
 
   const startSchedule = () => {
-    if (!schedule.message.trim()) return showStatus('请输入定时内容', 'error');
-    if (!isConnected) return showStatus('未处于连接状态', 'error');
+    if (!schedule.message.trim()) return showStatus('任务内容为空', 'error');
+    if (!isConnected) return showStatus('离线状态无法开启任务', 'error');
     setSchedule(prev => ({ ...prev, enabled: true }));
-    showStatus('定时任务已开启', 'success');
+    showStatus('循环发送开启', 'success');
     if (scheduleIntervalRef.current) clearInterval(scheduleIntervalRef.current);
     scheduleIntervalRef.current = window.setInterval(() => sendMessage(schedule.message, schedule.type), schedule.interval);
   };
@@ -292,93 +398,156 @@ const App: React.FC = () => {
     if (useRegexFilter) {
       try {
         return new RegExp(filterText, 'i').test(m.content);
-      } catch (e) { return m.content.toLowerCase().includes(filterText.toLowerCase()); }
+      } catch (e) { return false; }
     }
     return m.content.toLowerCase().includes(filterText.toLowerCase());
   });
 
+  // Captures X coordinate ONLY on initial enter to fulfill "don't always follow" requirement
+  const handleMessageMouseEnter = (e: React.MouseEvent, id: string) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    setToolbarX(x);
+    setHoveredMsgId(id);
+  };
+
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden text-slate-200">
-      {/* Sidebar */}
-      <aside className="w-80 border-r border-slate-800 flex flex-col bg-slate-900/50">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          <h1 className="text-xl font-bold flex items-center gap-2 text-indigo-400">
-            <Layers size={20} /> WS Pro
-          </h1>
-          {statusMessage && (
-            <div className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
-              statusMessage.type === 'error' ? 'bg-rose-900/30 border-rose-500 text-rose-400' :
-              statusMessage.type === 'success' ? 'bg-emerald-900/30 border-emerald-500 text-emerald-400' :
-              statusMessage.type === 'warning' ? 'bg-amber-900/30 border-amber-500 text-amber-400' :
-              'bg-blue-900/30 border-blue-500 text-blue-400'
-            }`}>
-              {statusMessage.text}
+    <div className="flex h-screen bg-slate-950 overflow-hidden text-slate-300 font-sans selection:bg-cyan-500/30">
+      {/* Templates Modal */}
+      {showTplModal && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-96 shadow-2xl shadow-cyan-500/10 scale-in-center">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Save size={20} className="text-cyan-400" /> 保存消息模板
+            </h3>
+            <input 
+              autoFocus
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-cyan-500/50 outline-none mb-6 text-white"
+              placeholder="模板名称，例如：Auth Request"
+              value={newTplName}
+              onChange={(e) => setNewTplName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
+            />
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowTplModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-bold transition-all"
+              >
+                取消
+              </button>
+              <button 
+                onClick={saveTemplate}
+                className="flex-1 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-lg shadow-cyan-900/40"
+              >
+                保存模板
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+      {/* Centered Global Status Notification - Top Center */}
+      {statusMessage && (
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[600] pointer-events-none w-full flex justify-center">
+          <div className={`px-6 py-4 rounded-2xl border-2 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl animate-in slide-in-from-top-4 duration-500 flex items-center gap-4 ${
+            statusMessage.type === 'error' ? 'bg-rose-950/70 border-rose-500/50 text-rose-100 shadow-rose-500/20' :
+            statusMessage.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-100 shadow-emerald-500/20' :
+            'bg-cyan-950/70 border-cyan-500/50 text-cyan-100 shadow-cyan-500/20'
+          }`}>
+             <div className="p-2 rounded-full bg-white/10">
+               {statusMessage.type === 'error' ? <X size={20}/> : statusMessage.type === 'success' ? <Check size={20}/> : <Zap size={20}/>}
+             </div>
+             <span className="text-sm font-black tracking-tight">{statusMessage.text}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Sidebar */}
+      <aside className="w-80 border-r border-slate-900 flex flex-col bg-slate-900/20 backdrop-blur-xl shrink-0">
+        <div className="p-6 flex flex-col gap-1 border-b border-slate-900/50">
+          <h1 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg shadow-lg shadow-cyan-500/20">
+              <Terminal size={20} className="text-white" />
+            </div>
+            WebSocket
+          </h1>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest pl-12">Professional Tester</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-8 text-sm">
-          {/* History Section */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-10">
+          {/* Connection History */}
           <section>
-            <div className="flex items-center justify-between mb-3 text-slate-400">
-              <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1">
-                {ICONS.History} 最近连接
-              </span>
+            <div className="flex items-center gap-2 mb-4">
+              <HistoryIcon size={14} className="text-slate-500" />
+              <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">历史记录</span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {history.map(item => (
                 <button
                   key={item.id}
                   onClick={() => { setUrl(item.url); setAuth(item.auth); }}
-                  className="w-full text-left p-2.5 rounded hover:bg-slate-800 transition text-xs group flex items-center justify-between border border-transparent hover:border-slate-700"
+                  className="w-full text-left p-3 rounded-xl bg-slate-900/40 hover:bg-slate-800 border border-slate-800/50 hover:border-slate-700 transition group flex items-center justify-between"
                 >
-                  <span className="truncate flex-1 font-medium">{item.url}</span>
-                  <span className="opacity-0 group-hover:opacity-100 text-rose-500" onClick={(e) => { e.stopPropagation(); setHistory(h => h.filter(x => x.id !== item.id)); }}>{ICONS.Trash}</span>
+                  <div className="truncate flex-1">
+                    <p className="text-xs font-bold text-slate-300 truncate">{item.url}</p>
+                    <p className="text-[10px] text-slate-600 mt-1">{new Date(item.lastConnected).toLocaleTimeString()}</p>
+                  </div>
+                  <ChevronRight size={14} className="text-slate-700 group-hover:text-cyan-500 transition-colors" />
                 </button>
               ))}
-              {history.length === 0 && <p className="text-[10px] text-slate-600 italic px-2">暂无历史记录</p>}
+              {history.length === 0 && <p className="text-[10px] text-slate-700 italic text-center py-4">No recent sessions</p>}
             </div>
           </section>
 
-          {/* Variables Info */}
-          <section className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/50">
-             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block flex items-center gap-1">
-              {ICONS.Variable} 可用变量
-            </span>
-            <div className="space-y-2">
-              {VARIABLE_HELP.map(v => (
-                <div key={v.key} className="text-[11px] flex flex-col gap-0.5">
-                  <code className="text-indigo-400 font-bold bg-indigo-900/20 rounded px-1 w-fit">{v.key}</code>
-                  <p className="text-slate-500">{v.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Templates Section - Now at bottom */}
-          <section className="mt-auto pt-4 border-t border-slate-800">
-            <div className="flex items-center justify-between mb-3 text-slate-400">
-              <span className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1">
-                {ICONS.Templates} 消息模板
-              </span>
-              <button onClick={addTemplate} className="hover:text-indigo-400 p-1 bg-slate-800 rounded">{ICONS.Plus}</button>
+          {/* Message Templates */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-slate-500" />
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">模板消息</span>
+              </div>
+              <button 
+                onClick={handleAddTemplate}
+                className="p-1.5 hover:bg-slate-800 rounded-lg text-cyan-500 transition-colors"
+                title="Save Current Message"
+              >
+                <Plus size={16} />
+              </button>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {templates.map(tpl => (
                 <div key={tpl.id} className="group relative">
                   <button
                     onClick={() => { setInputText(tpl.content); setMsgType(tpl.type); }}
-                    className="w-full text-left p-2.5 rounded bg-slate-800/30 hover:bg-slate-800 transition text-[11px] flex items-center justify-between border border-slate-800"
+                    className="w-full text-left p-3 rounded-xl bg-slate-800/30 hover:bg-cyan-950/20 border border-slate-800/50 hover:border-cyan-800/50 transition-all flex flex-col gap-1"
                   >
-                    <span className="truncate font-medium">{tpl.name}</span>
-                    <span className="text-[9px] text-slate-500 uppercase font-bold">{tpl.type}</span>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-bold text-slate-300 truncate pr-4">{tpl.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 font-black tracking-tighter uppercase">{tpl.type}</span>
+                    </div>
                   </button>
                   <button 
-                    onClick={() => setTemplates(t => t.filter(x => x.id !== tpl.id))}
-                    className="absolute right-0 top-0 mt-2 mr-2 opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500"
+                    onClick={(e) => { e.stopPropagation(); setTemplates(t => t.filter(x => x.id !== tpl.id)); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-2 hover:text-rose-500 transition-opacity bg-slate-900 rounded-lg shadow-xl"
                   >
-                    {ICONS.Trash}
+                    <Trash2 size={12} />
                   </button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Variables Reference */}
+          <section className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/50">
+             <div className="flex items-center gap-2 mb-4">
+              <Zap size={14} className="text-amber-500" />
+              <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">动态变量</span>
+            </div>
+            <div className="space-y-3">
+              {VARIABLE_HELP.map(v => (
+                <div key={v.key} className="text-[10px]">
+                  <code className="text-amber-400 font-bold bg-amber-950/30 rounded px-1.5 py-0.5 block w-fit mb-1">{v.key}</code>
+                  <p className="text-slate-600 font-medium leading-relaxed">{v.desc}</p>
                 </div>
               ))}
             </div>
@@ -386,278 +555,319 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="p-4 bg-slate-900 border-b border-slate-800">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 flex gap-2">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="wss://..."
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
-              />
-              <button
-                onClick={isConnected ? disconnect : connect}
-                disabled={isConnecting}
-                className={`px-6 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
-                  isConnected 
-                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg' 
-                    : isConnecting 
-                      ? 'bg-slate-700 text-slate-400'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-900/30'
-                }`}
-              >
-                {isConnecting ? '连接中...' : isConnected ? <>{ICONS.Stop} 断开</> : <>{ICONS.Play} 连接</>}
-              </button>
-            </div>
-            
-            <div className="flex gap-2 items-center bg-slate-800/50 p-1 rounded-lg border border-slate-800">
-              <select 
-                value={auth.type}
-                onChange={(e) => setAuth({ ...auth, type: e.target.value as any })}
-                className="bg-transparent text-xs outline-none px-2 py-1.5 font-bold text-indigo-400"
-              >
-                <option value="none">无认证</option>
-                <option value="bearer">Bearer</option>
-                <option value="basic">Basic</option>
-              </select>
-
-              {auth.type !== 'none' && (
-                <div className="h-4 w-px bg-slate-700 mx-1" />
-              )}
-
-              {auth.type === 'bearer' && (
-                <input
-                  type="password"
-                  value={auth.token || ''}
-                  onChange={(e) => setAuth({ ...auth, token: e.target.value })}
-                  placeholder="Token"
-                  className="w-32 bg-transparent text-xs focus:outline-none px-2"
-                />
-              )}
-
-              {auth.type === 'basic' && (
-                <div className="flex gap-2">
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
+        {/* URL & Config Header */}
+        <header className="p-6 bg-slate-900/20 border-b border-slate-900/80 backdrop-blur-md shrink-0">
+          <div className="max-w-6xl mx-auto space-y-4">
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+              <div className="flex-1 flex gap-2 relative group">
+                <div className="flex-1 flex bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all">
+                  <div className="flex items-center px-4 border-r border-slate-800">
+                    <Terminal size={14} className="text-slate-600" />
+                  </div>
                   <input
                     type="text"
-                    value={auth.username || ''}
-                    onChange={(e) => setAuth({ ...auth, username: e.target.value })}
-                    placeholder="User"
-                    className="w-20 bg-transparent text-xs focus:outline-none px-1"
-                  />
-                  <input
-                    type="password"
-                    value={auth.password || ''}
-                    onChange={(e) => setAuth({ ...auth, password: e.target.value })}
-                    placeholder="Pass"
-                    className="w-20 bg-transparent text-xs focus:outline-none px-1"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="wss://endpoint.com/v1"
+                    className="flex-1 bg-transparent px-4 py-3 text-sm outline-none font-mono text-cyan-50"
                   />
                 </div>
-              )}
+                <button
+                  onClick={isConnected ? disconnect : connect}
+                  disabled={isConnecting}
+                  className={`px-8 rounded-2xl text-sm font-black transition-all flex items-center gap-2 shadow-2xl ${
+                    isConnected 
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/20' 
+                      : isConnecting 
+                        ? 'bg-slate-800 text-slate-500 cursor-wait'
+                        : 'bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white shadow-cyan-900/20'
+                  }`}
+                >
+                  {isConnecting ? <RefreshCw className="animate-spin" size={16}/> : isConnected ? <Square size={16}/> : <Play size={16}/>}
+                  {isConnecting ? '握手中' : isConnected ? '断开' : '连接'}
+                </button>
+              </div>
+
+              {/* Authentication Controls */}
+              <div className="flex items-center gap-3 bg-slate-900/30 p-2 rounded-2xl border border-slate-800/50">
+                <CustomAuthSelector 
+                  value={auth.type} 
+                  onChange={(val) => setAuth({ ...auth, type: val })} 
+                />
+
+                <div className="flex items-center min-h-[40px]">
+                  {auth.type === 'bearer' && (
+                    <input
+                      type="password"
+                      value={auth.token || ''}
+                      onChange={(e) => setAuth({ ...auth, token: e.target.value })}
+                      placeholder="Bearer Token..."
+                      className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-48 text-cyan-200"
+                    />
+                  )}
+
+                  {auth.type === 'basic' && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={auth.username || ''}
+                        onChange={(e) => setAuth({ ...auth, username: e.target.value })}
+                        placeholder="User"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-24 text-cyan-200"
+                      />
+                      <input
+                        type="password"
+                        value={auth.password || ''}
+                        onChange={(e) => setAuth({ ...auth, password: e.target.value })}
+                        placeholder="Pass"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-24 text-cyan-200"
+                      />
+                    </div>
+                  )}
+
+                  {auth.type === 'custom-header' && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={auth.customKey || ''}
+                        onChange={(e) => setAuth({ ...auth, customKey: e.target.value })}
+                        placeholder="Key (X-Auth)"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
+                      />
+                      <input
+                        type="text"
+                        value={auth.customValue || ''}
+                        onChange={(e) => setAuth({ ...auth, customValue: e.target.value })}
+                        placeholder="Value"
+                        className="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 w-28 text-cyan-200"
+                      />
+                    </div>
+                  )}
+
+                  {auth.type === 'none' && (
+                    <span className="text-[10px] text-slate-600 font-bold px-4 uppercase tracking-[0.15em] opacity-60">无需认证</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick Filters */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+              <div className="flex items-center gap-8">
+                <ToggleSwitch label="自动重连" checked={autoReconnect} onChange={setAutoReconnect} color="bg-indigo-500" />
+                <ToggleSwitch label="全局 JSON 格式化" checked={autoFormatJSON} onChange={setAutoFormatJSON} color="bg-emerald-500" />
+                <ToggleSwitch label="正则过滤" checked={useRegexFilter} onChange={setUseRegexFilter} color="bg-amber-500" />
+              </div>
+              
+              <div className="relative w-64">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
+                <input
+                  type="text"
+                  placeholder="搜索流量日志..."
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  className="w-full bg-slate-900/80 border border-slate-800 rounded-full pl-9 pr-4 py-1.5 text-xs focus:ring-1 focus:ring-cyan-500/50 outline-none placeholder:text-slate-700"
+                />
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Message Controls Panel */}
-        <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
-          <div className="px-4 py-3 border-b border-slate-900 bg-slate-900/30 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-6 flex-1 min-w-[300px]">
-              <div className="relative flex-1 max-w-sm">
-                <span className="absolute left-3 top-2 text-slate-500">{ICONS.Search}</span>
-                <input
-                  type="text"
-                  placeholder={useRegexFilter ? "正则匹配模式..." : "文本过滤关键词..."}
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-full pl-9 pr-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
-              
-              <div className="flex items-center gap-5 border-l border-slate-800 pl-6">
-                <ToggleSwitch label="Regex" checked={useRegexFilter} onChange={setUseRegexFilter} color="bg-amber-600" />
-                <ToggleSwitch label="Format JSON" checked={autoFormatJSON} onChange={setAutoFormatJSON} color="bg-emerald-600" />
-                <ToggleSwitch label="Auto Reconnect" checked={autoReconnect} onChange={setAutoReconnect} color="bg-indigo-600" />
-              </div>
-            </div>
+        {/* Traffic Log */}
+        <div 
+          ref={scrollRef} 
+          className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar scroll-smooth"
+        >
+          {filteredMessages.map((msg) => {
+            const isJsonMsg = isJSON(msg.content);
+            const shouldFormat = (autoFormatJSON || msg.forceFormat) && isJsonMsg;
+            const isSent = msg.direction === 'sent';
             
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1 rounded-full border border-slate-800">
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`} />
-                <span className="text-[10px] font-black text-slate-400 tracking-tighter">{isConnected ? 'ONLINE' : 'OFFLINE'}</span>
-              </div>
-              <button onClick={() => setMessages([])} className="text-slate-500 hover:text-rose-400 p-1.5 transition-colors" title="清空记录">
-                {ICONS.Trash}
-              </button>
-            </div>
-          </div>
-
-          {/* Messages Log */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
-            {filteredMessages.map((msg) => {
-              const shouldFormat = (autoFormatJSON || msg.forceFormat) && isJSON(msg.content);
-              return (
-                <div key={msg.id} className={`flex flex-col ${msg.direction === 'sent' ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[90%] group relative`}>
-                    <div className={`flex items-center gap-2 mb-1.5 px-1 ${msg.direction === 'sent' ? 'justify-end' : ''}`}>
-                      <span className="text-[9px] text-slate-500 font-bold font-mono">{new Date(msg.timestamp).toLocaleTimeString()}</span>
-                      <span className={`text-[9px] font-black uppercase px-1.5 rounded ${msg.direction === 'sent' ? 'bg-indigo-900/30 text-indigo-400' : 'bg-emerald-900/30 text-emerald-400'}`}>
-                        {msg.direction === 'sent' ? 'Outbound' : 'Inbound'}
-                      </span>
-                    </div>
+            return (
+              <div 
+                key={msg.id} 
+                className={`flex flex-col ${isSent ? 'items-end' : 'items-start'} group relative`}
+                onMouseEnter={(e) => handleMessageMouseEnter(e, msg.id)}
+                onMouseLeave={() => setHoveredMsgId(null)}
+              >
+                {/* Floating Toolbar - Positioned on Enter based on Pointer */}
+                {hoveredMsgId === msg.id && (
+                  <div 
+                    className="absolute z-50 flex items-center gap-2 px-2 py-1.5 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl backdrop-blur-md pointer-events-auto transition-all animate-in fade-in slide-in-from-bottom-1"
+                    style={{ 
+                      top: '-42px', 
+                      left: `${toolbarX}px`,
+                      transform: 'translateX(-50%)'
+                    }}
+                  >
+                    <ActionButton 
+                      icon={<Copy size={13} />} 
+                      tip="复制原始内容" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(msg.content);
+                        showStatus('已复制原始文本', 'success');
+                      }} 
+                    />
                     
-                    <div className={`
-                      p-3 rounded-xl border shadow-sm transition-all duration-300 relative
-                      ${msg.direction === 'sent' 
-                        ? 'bg-indigo-900/10 border-indigo-500/30 text-indigo-100' 
-                        : msg.isError 
-                          ? 'bg-rose-900/10 border-rose-500/30 text-rose-200' 
-                          : 'bg-slate-900/40 border-slate-800 text-slate-200'
-                      }
-                    `}>
-                      {shouldFormat ? (
-                        <JSONHighlighter content={formatJSON(msg.content)} />
-                      ) : (
-                        <div className="text-[13px] code-font whitespace-pre-wrap break-words">{msg.content}</div>
-                      )}
+                    {isJsonMsg && (
+                      <ActionButton 
+                        icon={msg.forceFormat ? <Code2 size={13} /> : <FileJson size={13} />} 
+                        tip={msg.forceFormat ? "显示原始文本" : "格式化 JSON"}
+                        color="text-emerald-500" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMessageFormatting(msg.id);
+                        }} 
+                      />
+                    )}
 
-                      {/* Message Actions */}
-                      <div className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {isJSON(msg.content) && (
-                          <button 
-                            onClick={() => toggleMessageFormat(msg.id)}
-                            className={`p-1.5 rounded-full border shadow-xl transition-colors ${msg.forceFormat ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700'}`}
-                            title="单独切换格式化"
-                          >
-                            <Wand2 size={12} />
-                          </button>
-                        )}
-                        
-                        <div className="flex bg-slate-800 border border-slate-700 rounded-full overflow-hidden shadow-xl">
-                          <button 
-                            onClick={() => copyToClipboard(msg.content, false)}
-                            className="p-1.5 hover:bg-slate-700 text-slate-300 transition-colors border-r border-slate-700"
-                            title="复制 Raw"
-                          >
-                            <ClipboardType size={12} />
-                          </button>
-                          {isJSON(msg.content) && (
-                            <button 
-                              onClick={() => copyToClipboard(msg.content, true)}
-                              className="p-1.5 hover:bg-slate-700 text-emerald-400 transition-colors"
-                              title="复制 Pretty"
-                            >
-                              <ClipboardList size={12} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    {isJsonMsg && (
+                      <ActionButton 
+                        icon={<ClipboardList size={13} />} 
+                        tip="复制格式化 JSON" 
+                        color="text-cyan-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(formatJSON(msg.content));
+                          showStatus('已复制格式化 JSON', 'success');
+                        }} 
+                      />
+                    )}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-700" />
                   </div>
+                )}
+
+                <div className={`flex items-center gap-3 mb-2 px-1 text-[10px] font-black uppercase tracking-tighter ${isSent ? 'flex-row-reverse text-fuchsia-500' : 'text-cyan-500'}`}>
+                  <span>{isSent ? '发送 (OUT)' : '接收 (IN)'}</span>
+                  <div className={`w-1 h-1 rounded-full ${isSent ? 'bg-fuchsia-500' : 'bg-cyan-500'}`} />
+                  <span className="text-slate-600 font-mono opacity-80">{new Date(msg.timestamp).toLocaleTimeString()}</span>
                 </div>
-              );
-            })}
-            {filteredMessages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-slate-700 opacity-40">
-                <Layers size={64} className="mb-4 stroke-1" />
-                <p className="text-sm font-medium tracking-tight uppercase">Ready to monitor traffic</p>
+
+                <div className={`relative max-w-[90%] lg:max-w-[85%] p-4 rounded-2xl border transition-all duration-300 shadow-sm ${
+                  isSent 
+                    ? 'bg-fuchsia-950/5 border-fuchsia-500/10 text-fuchsia-50 group-hover:border-fuchsia-500/30' 
+                    : msg.isError 
+                      ? 'bg-rose-950/10 border-rose-500/20 text-rose-100' 
+                      : 'bg-slate-900/40 border-slate-800/80 text-slate-200 group-hover:border-slate-700'
+                }`}>
+                  {shouldFormat ? (
+                    <JSONHighlighter content={formatJSON(msg.content)} />
+                  ) : (
+                    <div className="text-[13px] font-mono whitespace-pre-wrap break-all leading-relaxed p-1">{msg.content}</div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })}
+          
+          {filteredMessages.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-slate-800">
+              <div className="p-8 bg-slate-900/20 rounded-full border border-slate-900/50 mb-6 group hover:border-cyan-500/20 transition-colors">
+                <RefreshCw size={48} className="opacity-10 group-hover:opacity-20 transition-opacity" />
+              </div>
+              <p className="text-sm font-black uppercase tracking-[0.2em] opacity-20 group-hover:opacity-40 transition-opacity">等待 Socket 流量数据...</p>
+            </div>
+          )}
         </div>
 
         {/* Composer Footer */}
-        <footer className="p-4 bg-slate-900 border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-          <div className="flex gap-6 max-w-7xl mx-auto">
-            <div className="flex-1 flex flex-col gap-3">
+        <footer className="p-6 bg-slate-900/40 border-t border-slate-900 backdrop-blur-xl shrink-0">
+          <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700">
+                <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800/50 shadow-inner">
                   <button 
                     onClick={() => setMsgType('text')}
-                    className={`px-4 py-1.5 text-[10px] rounded-md transition-all font-bold tracking-widest ${msgType === 'text' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`px-5 py-1.5 text-[10px] rounded-lg transition-all font-black tracking-widest ${msgType === 'text' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
                   >
-                    TEXT
+                    文本 (RAW)
                   </button>
                   <button 
                     onClick={() => setMsgType('json')}
-                    className={`px-4 py-1.5 text-[10px] rounded-md transition-all font-bold tracking-widest ${msgType === 'json' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`px-5 py-1.5 text-[10px] rounded-lg transition-all font-black tracking-widest ${msgType === 'json' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
                   >
                     JSON
                   </button>
                 </div>
                 {msgType === 'json' && (
                   <button 
-                    onClick={() => { setInputText(formatJSON(inputText)); }}
-                    className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5 px-3 py-1 bg-indigo-900/20 rounded-full border border-indigo-900/50"
+                    onClick={() => setInputText(formatJSON(inputText))}
+                    className="text-[10px] text-emerald-400 hover:text-emerald-300 font-black flex items-center gap-2 px-3 py-1.5 bg-emerald-950/30 rounded-lg border border-emerald-900/50 transition-colors group shadow-sm"
                   >
-                    {ICONS.JSON} PRETTIFY
+                    <Wand2 size={12} className="group-hover:rotate-12 transition-transform" /> 格式化输入
                   </button>
                 )}
               </div>
-              
-              <div className="relative group">
+
+              <div className="relative group/input">
                 <textarea
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendMessage();
                   }}
-                  placeholder={msgType === 'json' ? '{ "action": "ping" }' : 'Compose message...'}
+                  placeholder={msgType === 'json' ? '{ "type": "ping", "payload": {} }' : '输入发送内容... (Ctrl+Enter 发送)'}
                   rows={4}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-[13px] code-font focus:outline-none focus:ring-2 focus:ring-indigo-500/30 placeholder-slate-600 transition-all resize-none shadow-inner"
+                  className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all resize-none text-white shadow-inner scrollbar-hide"
                 />
                 <button
                   onClick={() => sendMessage()}
                   disabled={!isConnected}
-                  className={`absolute bottom-4 right-4 p-4 rounded-2xl shadow-2xl transition-all transform active:scale-95 flex items-center justify-center ${
+                  className={`absolute bottom-5 right-5 w-14 h-14 rounded-2xl shadow-2xl transition-all flex items-center justify-center group/send overflow-hidden ${
                     isConnected 
-                      ? 'bg-indigo-600 hover:bg-indigo-500 hover:scale-105 text-white' 
-                      : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'
+                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white active:scale-95 shadow-cyan-900/30' 
+                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
                 >
-                  {ICONS.Send}
+                  <Send size={24} className={`${isConnected ? 'group-hover/send:translate-x-1 group-hover/send:-translate-y-1 transition-transform' : ''}`} />
                 </button>
               </div>
             </div>
 
-            <div className="w-80 bg-slate-800/20 p-4 rounded-2xl border border-slate-800 flex flex-col gap-5">
-              <div>
-                <span className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-2 mb-4 tracking-tighter">
-                  {ICONS.Clock} Automatic Sequences
-                </span>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
+            {/* Scheduler Panel */}
+            <div className="w-full lg:w-80 bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col gap-4 shadow-2xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock size={14} className="text-indigo-400" />
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">自动化任务</span>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[10px] font-bold text-slate-600">频率间隔</span>
+                  <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800">
                     <input
                       type="number"
                       value={schedule.interval}
-                      onChange={(e) => setSchedule({ ...schedule, interval: Math.max(50, Number(e.target.value)) })}
-                      className="w-24 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-indigo-400 font-black focus:ring-1 focus:ring-indigo-500 outline-none"
+                      onChange={(e) => setSchedule({ ...schedule, interval: Math.max(10, Number(e.target.value)) })}
+                      className="w-16 bg-transparent text-xs text-indigo-400 font-black outline-none"
                     />
-                    <span className="text-[10px] font-bold text-slate-500">MS INTERVAL</span>
+                    <span className="text-[9px] text-slate-700">MS</span>
                   </div>
-                  
-                  <textarea 
-                    placeholder="Message to loop..."
-                    value={schedule.message}
-                    onChange={(e) => setSchedule({ ...schedule, message: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs h-24 code-font focus:ring-1 focus:ring-emerald-500 focus:outline-none placeholder-slate-700"
-                  />
-
-                  <button
-                    onClick={schedule.enabled ? stopSchedule : startSchedule}
-                    disabled={!isConnected}
-                    className={`w-full py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 border shadow-xl ${
-                      schedule.enabled 
-                        ? 'bg-rose-900/40 text-rose-400 border-rose-500/50 hover:bg-rose-900/60' 
-                        : isConnected
-                          ? 'bg-emerald-900/40 text-emerald-400 border-emerald-500/50 hover:bg-emerald-900/60'
-                          : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed opacity-50'
-                    }`}
-                  >
-                    {schedule.enabled ? <>{ICONS.Stop} STOP LOOP</> : <>{ICONS.Play} START SEQUENCE</>}
-                  </button>
                 </div>
+                
+                <textarea 
+                  placeholder="循环发送的内容..."
+                  value={schedule.message}
+                  onChange={(e) => setSchedule({ ...schedule, message: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] h-24 font-mono focus:ring-1 focus:ring-indigo-500 outline-none text-indigo-100 placeholder-slate-900"
+                />
+
+                <button
+                  onClick={schedule.enabled ? stopSchedule : startSchedule}
+                  disabled={!isConnected}
+                  className={`w-full py-4 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-3 border shadow-xl ${
+                    schedule.enabled 
+                      ? 'bg-rose-900/30 text-rose-400 border-rose-500/50 hover:bg-rose-900/50 shadow-rose-950/20 active:scale-[0.98]' 
+                      : isConnected
+                        ? 'bg-indigo-900/30 text-indigo-400 border-indigo-500/50 hover:bg-indigo-900/50 shadow-indigo-950/20 active:scale-[0.98]'
+                        : 'bg-slate-800/50 border-slate-800 text-slate-700 cursor-not-allowed'
+                  }`}
+                >
+                  {schedule.enabled ? <><Square size={14}/> 停止循环</> : <><Play size={14}/> 开启循环任务</>}
+                </button>
               </div>
             </div>
           </div>

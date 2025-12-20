@@ -17,7 +17,7 @@ export interface WSMessage {
   content: string;
   type: 'text' | 'json';
   isError?: boolean;
-  forceFormat?: boolean; // Toggle for individual message formatting
+  forceFormat?: boolean;
 }
 
 export interface HistoryItem {
@@ -37,7 +37,7 @@ export interface MessageTemplate {
 
 export interface ScheduleConfig {
   enabled: boolean;
-  interval: number; // in milliseconds
+  interval: number;
   message: string;
   type: 'text' | 'json';
 }
