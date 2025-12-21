@@ -480,17 +480,29 @@ const App: React.FC = () => {
             </div>
             <div className="space-y-2">
               {history.map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => { setUrl(item.url); setAuth(item.auth); }}
-                  className="w-full text-left p-3 rounded-xl bg-slate-900/40 hover:bg-slate-800 border border-slate-800/50 hover:border-slate-700 transition group flex items-center justify-between"
-                >
-                  <div className="truncate flex-1">
-                    <p className="text-xs font-bold text-slate-300 truncate">{item.url}</p>
-                    <p className="text-[10px] text-slate-600 mt-1">{new Date(item.lastConnected).toLocaleTimeString()}</p>
-                  </div>
-                  <ChevronRight size={14} className="text-slate-700 group-hover:text-cyan-500 transition-colors" />
-                </button>
+                <div key={item.id} className="group relative">
+                  <button
+                    onClick={() => { setUrl(item.url); setAuth(item.auth); }}
+                    className="w-full text-left p-3 rounded-xl bg-slate-900/40 hover:bg-slate-800 border border-slate-800/50 hover:border-slate-700 transition flex items-center justify-between pr-10"
+                  >
+                    <div className="truncate flex-1">
+                      <p className="text-xs font-bold text-slate-300 truncate">{item.url}</p>
+                      <p className="text-[10px] text-slate-600 mt-1">{new Date(item.lastConnected).toLocaleTimeString()}</p>
+                    </div>
+                    <ChevronRight size={14} className="text-slate-700 group-hover:text-cyan-500 transition-colors" />
+                  </button>
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setHistory(prev => prev.filter(h => h.id !== item.id));
+                      showStatus('已删除历史记录', 'info');
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-2 hover:text-rose-500 transition-opacity bg-slate-900/80 rounded-lg shadow-xl"
+                    title="Delete History"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               ))}
               {history.length === 0 && <p className="text-[10px] text-slate-700 italic text-center py-4">No recent sessions</p>}
             </div>
@@ -515,7 +527,7 @@ const App: React.FC = () => {
                 <div key={tpl.id} className="group relative">
                   <button
                     onClick={() => { setInputText(tpl.content); setMsgType(tpl.type); }}
-                    className="w-full text-left p-3 rounded-xl bg-slate-800/30 hover:bg-cyan-950/20 border border-slate-800/50 hover:border-cyan-800/50 transition-all flex flex-col gap-1"
+                    className="w-full text-left p-3 rounded-xl bg-slate-800/30 hover:bg-cyan-950/20 border border-slate-800/50 hover:border-cyan-800/50 transition-all flex flex-col gap-1 pr-10"
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="text-xs font-bold text-slate-300 truncate pr-4">{tpl.name}</span>
